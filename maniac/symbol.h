@@ -191,8 +191,8 @@ template <int bits, typename SymbolCoder> int reader(SymbolCoder& coder, int min
     int amin = (sign? min : -max);
     int amax = (sign? max : -min);
 
-    int emax = (bits <= 10 ? log2_tab[amax] : ilog2(amax));
-    int i = (bits <= 10 ? log2_tab[amin] : ilog2(amin));
+    int emax = ilog2(amax);
+    int i = ilog2(amin);
 
     for (; i < emax; i++) {
         // if exponent >i is impossible, we are done
@@ -263,8 +263,8 @@ template <int bits, typename SymbolCoder> void writer(SymbolCoder& coder, int mi
     int amin = sign ? abs(min) : abs(max);
     int amax = sign ? abs(max) : abs(min);
 
-    int emax = (bits <= 10 ? log2_tab[amax] : ilog2(amax));
-    int i = (bits <= 10 ? log2_tab[amin] : ilog2(amin));
+    int emax = ilog2(amax);
+    int i = ilog2(amin);
     while (i < emax) {
         // if exponent >i is impossible, we are done
         if ((1 << (i+1)) > amax) break;
