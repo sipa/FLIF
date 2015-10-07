@@ -1,5 +1,4 @@
-#ifndef _RAC_COMPOUND_H_
-#define _RAC_COMPOUND_H_ 1
+#pragma once
 
 #include <vector>
 #include <math.h>
@@ -225,7 +224,7 @@ public:
         BitChance& ch = bestChance(type, i);
         bool bit = rac.read(ch.get());
         updateChances(type, i, bit);
-//    fprintf(stderr,"bit %s%i = %s\n", SymbolChanceBitName[type], i, bit ? "true" : "false");
+//    e_printf("bit %s%i = %s\n", SymbolChanceBitName[type], i, bit ? "true" : "false");
         return bit;
     }
 
@@ -233,7 +232,7 @@ public:
         BitChance& ch = bestChance(type, i);
         rac.write(ch.get(), bit);
         updateChances(type, i, bit);
-//    fprintf(stderr,"bit %s%i = %s\n", SymbolChanceBitName[type], i, bit ? "true" : "false");
+//    e_printf("bit %s%i = %s\n", SymbolChanceBitName[type], i, bit ? "true" : "false");
     }
 };
 
@@ -400,7 +399,7 @@ public:
     void info(int n) const {
         indent(n); printf("Tree:\n");
         for (unsigned int i=0; i<leaf_node.size(); i++) {
-            indent(n); printf("Leaf %i\n", i);
+            indent(n); printf("Leaf %u\n", i);
             leaf_node[i].info(n+1);
         }
     }
@@ -430,7 +429,7 @@ private:
         uint32_t pos = 0;
         Ranges current_ranges = range;
         while(inner_node[pos].property != -1) {
-//        fprintf(stderr,"Checking property %i (val=%i, splitval=%i)\n",inner_node[pos].property,properties[inner_node[pos].property],inner_node[pos].splitval);
+//        e_printf("Checking property %i (val=%i, splitval=%i)\n",inner_node[pos].property,properties[inner_node[pos].property],inner_node[pos].splitval);
             if (properties[inner_node[pos].property] > inner_node[pos].splitval) {
                 current_ranges[inner_node[pos].property].first = inner_node[pos].splitval + 1;
                 pos = inner_node[pos].childID;
@@ -569,7 +568,7 @@ public:
             subtree_size += simplify_subtree(n.childID+1);
             n.count /= CONTEXT_TREE_COUNT_DIV;
             if (n.count > CONTEXT_TREE_MAX_COUNT) {
-//               fprintf(stderr, "Unexpected high count in context tree.\n");
+//               e_printf( "Unexpected high count in context tree.\n");
                n.count = CONTEXT_TREE_MAX_COUNT;
             }
             if (n.count < CONTEXT_TREE_MIN_COUNT) n.count=CONTEXT_TREE_MIN_COUNT;
@@ -619,7 +618,7 @@ public:
             int oldmax = subrange[p].second;
             assert(oldmin < oldmax);
             coder.write_int(oldmin, oldmax-1, n.splitval);
-//            fprintf(stderr, "Pos %i: prop %i splitval %i in [%i..%i]\n", pos, n.property, n.splitval, oldmin, oldmax-1);
+//            e_printf( "Pos %i: prop %i splitval %i in [%i..%i]\n", pos, n.property, n.splitval, oldmin, oldmax-1);
             // > splitval
             subrange[p].first = n.splitval+1;
             write_subtree(n.childID, subrange, tree);
@@ -645,14 +644,14 @@ public:
             int oldmin = subrange[p].first;
             int oldmax = subrange[p].second;
             if (oldmin >= oldmax) {
-              fprintf(stderr, "Invalid tree. Aborting tree decoding.\n");
+              e_printf( "Invalid tree. Aborting tree decoding.\n");
               return -1;
             }
             n.count = coder.read_int(CONTEXT_TREE_MIN_COUNT, CONTEXT_TREE_MAX_COUNT); // * CONTEXT_TREE_COUNT_QUANTIZATION;
             assert(oldmin < oldmax);
             int splitval = n.splitval = coder.read_int(oldmin, oldmax-1);
             int childID = n.childID = tree.size();
-//            fprintf(stderr, "Pos %i: prop %i splitval %i in [%i..%i]\n", pos, n.property, splitval, oldmin, oldmax-1);
+//            e_printf( "Pos %i: prop %i splitval %i in [%i..%i]\n", pos, n.property, splitval, oldmin, oldmax-1);
             tree.push_back(PropertyDecisionNode());
             tree.push_back(PropertyDecisionNode());
             // > splitval
@@ -675,5 +674,3 @@ public:
           read_subtree(0, rootrange, tree);
     }
 };
-
-#endif

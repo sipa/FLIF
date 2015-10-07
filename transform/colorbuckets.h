@@ -1,5 +1,4 @@
-#ifndef _CB_H_
-#define _CB_H_ 1
+#pragma once
 
 #include <vector>
 
@@ -279,11 +278,12 @@ public:
 };
 
 
-class TransformCB : public Transform {
+template <typename IO>
+class TransformCB : public Transform<IO> {
 protected:
     ColorBuckets *cb;
 
-    const ColorRanges* meta(Images& images, const ColorRanges *srcRanges) {
+    const ColorRanges* meta(Images&, const ColorRanges *srcRanges) {
 //        cb->print();
         // in the I buckets, some discrete buckets may have become continuous to keep the colorbucket info small
         // this means some Q buckets are empty, which means that some values from the I buckets can be eliminated
@@ -319,6 +319,7 @@ protected:
         if (srcRanges->min(0) == srcRanges->max(0) &&
             srcRanges->min(1) == srcRanges->max(1) &&
             srcRanges->min(2) == srcRanges->max(2)) return false; // only alpha plane contains information
+        if (srcRanges->max(0) > 255) return false; // do not attempt this on high bit depth images (TODO: generalize color bucket quantization!)
         cb = new ColorBuckets(srcRanges);
         return true;
     }
@@ -349,7 +350,7 @@ protected:
         }
     }
 
-    ColorBucket load_bucket(SimpleSymbolCoder<FLIFBitChanceMeta, RacIn, 24> &coder, const ColorRanges *srcRanges, const int plane, const prevPlanes &pixelL, const prevPlanes &pixelU) {
+    ColorBucket load_bucket(SimpleSymbolCoder<FLIFBitChanceMeta, RacIn<IO>, 24> &coder, const ColorRanges *srcRanges, const int plane, const prevPlanes &pixelL, const prevPlanes &pixelU) {
         ColorBucket b;
         if (plane<3)
         for (int p=0; p<plane; p++) {
@@ -393,9 +394,9 @@ protected:
 //        b.print();
         return b;
     }
-    void load(const ColorRanges *srcRanges, RacIn &rac) {
+    void load(const ColorRanges *srcRanges, RacIn<IO> &rac) {
 //        printf("Loading Color Buckets\n");
-        SimpleSymbolCoder<FLIFBitChanceMeta, RacIn, 24> coder(rac);
+        SimpleSymbolCoder<FLIFBitChanceMeta, RacIn<IO>, 24> coder(rac);
         prevPlanes pixelL, pixelU;
         cb->bucket0 = load_bucket(coder, srcRanges, 0, pixelL, pixelU);
         pixelL.push_back(cb->min0);
@@ -417,7 +418,7 @@ protected:
         if (srcRanges->numPlanes() > 3) cb->bucket3 = load_bucket(coder, srcRanges, 3, pixelL, pixelU);
     }
 
-    void save_bucket(const ColorBucket &b, SimpleSymbolCoder<FLIFBitChanceMeta, RacOut, 24> &coder, const ColorRanges *srcRanges, const int plane, const prevPlanes &pixelL, const prevPlanes &pixelU) const {
+    void save_bucket(const ColorBucket &b, SimpleSymbolCoder<FLIFBitChanceMeta, RacOut<IO>, 24> &coder, const ColorRanges *srcRanges, const int plane, const prevPlanes &pixelL, const prevPlanes &pixelU) const {
         if (plane<3)
         for (int p=0; p<plane; p++) {
                 if (!cb->exists(p,pixelL,pixelU)) {
@@ -464,8 +465,8 @@ protected:
              }
         }
     }
-    void save(const ColorRanges *srcRanges, RacOut &rac) const {
-        SimpleSymbolCoder<FLIFBitChanceMeta, RacOut, 24> coder(rac);
+    void save(const ColorRanges *srcRanges, RacOut<IO> &rac) const {
+        SimpleSymbolCoder<FLIFBitChanceMeta, RacOut<IO>, 24> coder(rac);
 
 //        printf("Saving Y Color Bucket: ");
         prevPlanes pixelL, pixelU;
@@ -496,7 +497,7 @@ protected:
         }
     }
 
-    bool process(const ColorRanges *srcRanges, const Images &images) {
+    bool process(const ColorRanges *, const Images &images) {
             std::vector<ColorVal> pixel(images[0].numPlanes());
             // fill buckets
             for (const Image& image : images)
@@ -549,5 +550,3 @@ protected:
             return true;
     }
 };
-
-#endif

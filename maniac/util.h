@@ -1,7 +1,9 @@
-#ifndef _UTIL_H_
-#define _UTIL_H_ 1
+#pragma once
 
-#include <stdint.h>
+#include <cstdint>
+
+namespace maniac {
+namespace util {
 
 static inline int ilog2(uint32_t l) {
     if (l == 0) { return 0; }
@@ -16,6 +18,7 @@ template<typename I> void static swap(I& a, I& b)
     a = b;
     b = c;
 }
+
 template<typename I> I static median3(I a, I b, I c)
 {
     if (a<b) swap(a,b);
@@ -24,7 +27,5 @@ template<typename I> I static median3(I a, I b, I c)
     return b;
 }
 
-//#define STATS 1
-
-
-#endif
+} // namespace util
+} // namespace maniac

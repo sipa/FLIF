@@ -1,11 +1,13 @@
-#ifndef _RAC_CHANCE_H_
-#define _RAC_CHANCE_H_ 1
+#pragma once
 
 #include <vector>
 #include <math.h>
 #include <stdint.h>
+
+#ifdef STATS
 #include <stdlib.h>
 #include <stdio.h>
+#endif
 
 extern const uint16_t log4k[4097];
 extern const int log4k_scale;
@@ -36,7 +38,7 @@ public:
         chance = chanceIn;
     }
 
-    void inline put(bool bit, const Table &table) {}
+    void inline put(bool, const Table &) {}
 
     void estim(bool bit, uint64_t &total) const {
         total += log4k[bit ? chance : 4096-chance];
@@ -231,5 +233,3 @@ public:
     }
 #endif
 };
-
-#endif
