@@ -4,10 +4,10 @@
 
 #include "fileio.hpp"
 
-template <typename IO> using RacIn = RacInput24<IO>;
+template <typename IO> using RacIn = StackDecoder<IO>;
 
 #ifdef HAS_ENCODER
-template <typename IO> using RacOut = RacOutput24<IO>;
+template <typename IO> using RacOut = StackEncoder<IO>;
 #endif
 
 #include "maniac/compound.hpp"
