@@ -13,7 +13,8 @@ class StackDecoder
     IO& io;
     uint32_t accumulator;
     uint32_t symbols_left;
-    uint32_t bytes_left;
+    std::vector<unsigned char> blob;
+    std::vector<unsigned char>::const_iterator blobiter;
 
     inline int read_catch_eof() {
         int c = io.getc();
@@ -29,6 +30,7 @@ class StackDecoder
              * - 10xxxxxx yyyyyyyy = (x << 8) + y + 0x80 [128-16511]
              * - 11xxxxxx yyyyyyyy zzzzzzzz = (x << 16) + (y << 8) + z + 0x4080 [16512-4210815]
              */
+            uint32_t bytes_left;
             if (b < 0x80) {
                 bytes_left = b;
             } else if (b < 0xC0) {
@@ -36,13 +38,18 @@ class StackDecoder
             } else {
                 bytes_left = ((b & 0x3F) << 16) + (((uint32_t)read_catch_eof()) << 8) + read_catch_eof() + 0x4080;
             }
+            blob.reserve(bytes_left);
+            blob.resize(0);
+            while (bytes_left--) {
+                blob.push_back(read_catch_eof());
+            }
+            blobiter = blob.begin();
             accumulator = 0;
             symbols_left = STACK_CODER_MAX_SYMBOLS;
         }
         symbols_left--;
-        while (accumulator < 0x1000000UL && bytes_left) {
-            bytes_left--;
-            accumulator = (accumulator << 8) | read_catch_eof();
+        while (accumulator < 0x1000000UL && blobiter != blob.end()) {
+            accumulator = (accumulator << 8) | *(blobiter++);
         }
     }
 
